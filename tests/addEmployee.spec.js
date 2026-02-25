@@ -1,36 +1,29 @@
 const { test, expect } = require('@playwright/test');
-const { LoginActions } = require('../actions/LoginActions');
-const { DashboardPage } = require('../pages/DashboardPage');
-const { PIMActions } = require('../actions/PIMActions');
+const { LoginPage } = require('../pageActions/loginPage');
+const { DashboardPage } = require('../pageActions/dashboardPage');
+const { PIMPage } = require('../pageActions/pimPage');
 const testData = require('../testdata/employeeData.json');
 
 test('Add Employee Test', async ({ page }) => {
 
-  const login = new LoginActions(page);
-  const dashboard = new DashboardPage(page);
-  const pim = new PIMActions(page);
+  const loginPage = new LoginPage(page);
+  const dashboardPage = new DashboardPage(page);
+  const pimPage = new PIMPage(page);
 
-  // 1️⃣ Login
-  await login.login(testData.username, testData.password);
+  await loginPage.openApp();
+  await loginPage.login(testData.username, testData.password);
 
-  // Screenshot after login page load
-  //await page.screenshot({ path: 'loginPage.png' });
-
-  // 2️⃣ Click PIM and validate navigation
-  await dashboard.clickPIM();
+  await dashboardPage.clickPIM();
   await expect(page).toHaveURL(/pim/);
 
-  // 3️⃣ Add Employee
-  const employeeId = await pim.addEmployee(
+  const employeeId = await pimPage.addEmployee(
     testData.firstName,
     testData.lastName
   );
 
   console.log("Stored Employee ID:", employeeId);
 
-  // 4️⃣ Search & Validate Employee in table
-  await pim.validateEmployee(employeeId);
+  await pimPage.searchEmployee(employeeId);
 
-  await expect(page.locator('.oxd-table-body')).toContainText(employeeId);
-
+  await expect(pimPage.getEmployeeRow(employeeId)).toBeVisible();
 });
